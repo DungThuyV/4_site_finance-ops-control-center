@@ -1,0 +1,488 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.app{display:flex;min-height:600px}
+.sidebar{width:200px;border-right:0.5px solid var(--border);padding:1rem 0;flex-shrink:0}
+.sidebar-title{font-size:11px;font-weight:500;color:var(--text-muted);padding:0 1rem 0.75rem;text-transform:uppercase;letter-spacing:0.05em}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 1rem;font-size:14px;color:var(--text-secondary);cursor:pointer;border:none;background:none;width:100%;text-align:left;border-radius:0}
+.nav-item:hover{background:var(--surface-1);color:var(--text-primary)}
+.nav-item.active{background:var(--bg-accent);color:var(--text-accent)}
+.nav-item i{font-size:16px}
+.main{flex:1;padding:1.5rem;overflow:auto}
+.page{display:none}
+.page.active{display:block}
+.page-title{font-size:18px;font-weight:500;margin-bottom:1.5rem;color:var(--text-primary)}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:1.5rem}
+.metric-card{background:var(--surface-1);border-radius:var(--radius);padding:1rem}
+.metric-label{font-size:12px;color:var(--text-secondary);margin-bottom:4px}
+.metric-value{font-size:22px;font-weight:500;color:var(--text-primary)}
+.metric-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.metric-value.success{color:var(--text-success)}
+.metric-value.danger{color:var(--text-danger)}
+.metric-value.warning{color:var(--text-warning)}
+.section{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.section-title{font-size:14px;font-weight:500;margin-bottom:1rem;color:var(--text-primary)}
+.upload-area{border:0.5px dashed var(--border-strong);border-radius:var(--radius);padding:1.5rem;text-align:center;cursor:pointer;transition:background 0.15s}
+.upload-area:hover{background:var(--surface-1)}
+.upload-area i{font-size:24px;color:var(--text-muted);display:block;margin-bottom:8px}
+.upload-area p{font-size:13px;color:var(--text-secondary)}
+.upload-area input{display:none}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);font-size:13px;cursor:pointer;border:0.5px solid var(--border-strong);background:none;color:var(--text-primary);font-family:var(--font-sans)}
+.btn:hover{background:var(--surface-1)}
+.btn.primary{background:var(--fill-accent);color:var(--on-accent);border-color:transparent}
+.btn.primary:hover{background:var(--fill-accent-hover)}
+.btn.success-btn{background:var(--fill-success);color:var(--on-success);border-color:transparent}
+.btn-row{display:flex;gap:8px;margin-top:1rem;align-items:center}
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th{text-align:left;padding:8px 12px;font-size:11px;font-weight:500;color:var(--text-muted);border-bottom:0.5px solid var(--border);text-transform:uppercase;letter-spacing:0.04em}
+.table td{padding:10px 12px;border-bottom:0.5px solid var(--border);color:var(--text-primary)}
+.table tr:last-child td{border-bottom:none}
+.table tr:hover td{background:var(--surface-1)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:500}
+.badge.matched{background:var(--bg-success);color:var(--text-success)}
+.badge.unmatched{background:var(--bg-danger);color:var(--text-danger)}
+.badge.partial{background:var(--bg-warning);color:var(--text-warning)}
+.badge.open{background:var(--bg-danger);color:var(--text-danger)}
+.badge.resolved{background:var(--bg-success);color:var(--text-success)}
+.badge.review{background:var(--bg-warning);color:var(--text-warning)}
+.file-info{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-success);border-radius:var(--radius);font-size:13px;color:var(--text-success);margin-top:8px}
+.empty{text-align:center;padding:3rem;color:var(--text-muted);font-size:13px}
+.empty i{font-size:32px;display:block;margin-bottom:8px}
+.input-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:1rem}
+.input-group{display:flex;flex-direction:column;gap:4px}
+.input-group label{font-size:12px;color:var(--text-secondary)}
+.input-group input, .input-group select{font-size:13px;padding:6px 10px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary);font-family:var(--font-sans)}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+.summary-row:last-child{border-bottom:none;font-weight:500;font-size:14px;padding-top:12px}
+.summary-row span:first-child{color:var(--text-secondary)}
+.alert{padding:10px 14px;border-radius:var(--radius);font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.alert.danger{background:var(--bg-danger);color:var(--text-danger);border:0.5px solid var(--border-danger)}
+.alert.success{background:var(--bg-success);color:var(--text-success);border:0.5px solid var(--border-success)}
+.progress-bar{height:6px;background:var(--surface-1);border-radius:100px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:100px;transition:width 0.3s}
+.progress-fill.success{background:var(--fill-success)}
+.progress-fill.danger{background:var(--fill-danger)}
+.chart-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px}
+.chart-bar-row .label{width:80px;color:var(--text-secondary);text-align:right;flex-shrink:0}
+.chart-bar-row .bar-wrap{flex:1;background:var(--surface-1);border-radius:100px;height:20px;overflow:hidden}
+.chart-bar-row .bar{height:100%;border-radius:100px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:500;color:white;transition:width 0.4s}
+.divider{height:0.5px;background:var(--border);margin:1rem 0}
+</style>
+
+<h2 class="sr-only">Finance Operations Control Center — reconciliation, exception management, and analytics</h2>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-title">Finance Ops</div>
+    <button class="nav-item active" onclick="showPage('dashboard')">
+      <i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard
+    </button>
+    <button class="nav-item" onclick="showPage('reconciliation')">
+      <i class="ti ti-arrows-exchange" aria-hidden="true"></i> Reconciliation
+    </button>
+    <button class="nav-item" onclick="showPage('exceptions')">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i> Exceptions
+    </button>
+    <button class="nav-item" onclick="showPage('analytics')">
+      <i class="ti ti-chart-bar" aria-hidden="true"></i> Analytics
+    </button>
+    <button class="nav-item" onclick="showPage('export')">
+      <i class="ti ti-download" aria-hidden="true"></i> Export
+    </button>
+  </div>
+
+  <div class="main">
+
+    <div id="page-dashboard" class="page active">
+      <div class="page-title">Dashboard</div>
+      <div class="metrics" id="dash-metrics">
+        <div class="metric-card">
+          <div class="metric-label">Total transactions</div>
+          <div class="metric-value" id="d-total">—</div>
+          <div class="metric-sub">from loaded data</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Reconciliation rate</div>
+          <div class="metric-value success" id="d-recon-rate">—</div>
+          <div class="progress-bar"><div class="progress-fill success" id="d-recon-bar" style="width:0%"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Exception rate</div>
+          <div class="metric-value danger" id="d-exc-rate">—</div>
+          <div class="progress-bar"><div class="progress-fill danger" id="d-exc-bar" style="width:0%"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Financial exposure</div>
+          <div class="metric-value warning" id="d-exposure">—</div>
+          <div class="metric-sub">unmatched amount</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Recent exceptions</div>
+        <div id="dash-exceptions-list"><div class="empty"><i class="ti ti-inbox" aria-hidden="true"></i>No data yet — run reconciliation first</div></div>
+      </div>
+    </div>
+
+    <div id="page-reconciliation" class="page">
+      <div class="page-title">Reconciliation</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem">
+        <div class="section">
+          <div class="section-title"><i class="ti ti-building-bank" aria-hidden="true" style="font-size:14px;margin-right:4px"></i>Bank statement</div>
+          <label class="upload-area" for="bank-upload">
+            <i class="ti ti-upload" aria-hidden="true"></i>
+            <p>Upload bank.csv</p>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px">columns: id, date, description, amount</p>
+            <input type="file" id="bank-upload" accept=".csv" onchange="loadFile(this,'bank')">
+          </label>
+          <div id="bank-info"></div>
+        </div>
+        <div class="section">
+          <div class="section-title"><i class="ti ti-book" aria-hidden="true" style="font-size:14px;margin-right:4px"></i>Internal ledger</div>
+          <label class="upload-area" for="ledger-upload">
+            <i class="ti ti-upload" aria-hidden="true"></i>
+            <p>Upload ledger.csv</p>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px">columns: id, date, description, amount</p>
+            <input type="file" id="ledger-upload" accept=".csv" onchange="loadFile(this,'ledger')">
+          </label>
+          <div id="ledger-info"></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Or use sample data to try the tool</div>
+        <button class="btn primary" onclick="loadSampleData()"><i class="ti ti-database" aria-hidden="true"></i>Load sample data</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn primary" onclick="runReconciliation()"><i class="ti ti-arrows-exchange" aria-hidden="true"></i>Run reconciliation</button>
+        <span id="recon-status" style="font-size:13px;color:var(--text-muted)"></span>
+      </div>
+      <div id="recon-results"></div>
+    </div>
+
+    <div id="page-exceptions" class="page">
+      <div class="page-title">Exception management</div>
+      <div class="section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <div class="section-title" style="margin-bottom:0">Open exceptions</div>
+          <div style="display:flex;gap:8px">
+            <select id="exc-filter" onchange="renderExceptions()" style="font-size:12px;padding:4px 8px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary)">
+              <option value="all">All types</option>
+              <option value="missing_bank">Missing in bank</option>
+              <option value="missing_ledger">Missing in ledger</option>
+              <option value="amount_mismatch">Amount mismatch</option>
+            </select>
+          </div>
+        </div>
+        <div id="exceptions-table"><div class="empty"><i class="ti ti-alert-triangle" aria-hidden="true"></i>No exceptions yet — run reconciliation first</div></div>
+      </div>
+    </div>
+
+    <div id="page-analytics" class="page">
+      <div class="page-title">Analytics</div>
+      <div class="section">
+        <div class="section-title">Monthly transaction trend</div>
+        <div id="monthly-chart"><div class="empty"><i class="ti ti-chart-bar" aria-hidden="true"></i>No data — run reconciliation first</div></div>
+      </div>
+      <div class="section" style="margin-top:1rem">
+        <div class="section-title">Exception breakdown</div>
+        <div id="exc-breakdown"><div class="empty"><i class="ti ti-chart-pie" aria-hidden="true"></i>No data — run reconciliation first</div></div>
+      </div>
+    </div>
+
+    <div id="page-export" class="page">
+      <div class="page-title">Export</div>
+      <div class="section">
+        <div class="section-title">Download reconciliation report</div>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem">Export results as CSV — includes matched, unmatched, and exception details.</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn" onclick="exportCSV('full')"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i>Full reconciliation report</button>
+          <button class="btn" onclick="exportCSV('exceptions')"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Exceptions only</button>
+          <button class="btn" onclick="exportCSV('matched')"><i class="ti ti-check" aria-hidden="true"></i>Matched transactions only</button>
+        </div>
+        <div id="export-msg" style="margin-top:1rem"></div>
+      </div>
+      <div class="section" style="margin-top:1rem">
+        <div class="section-title">Reconciliation summary</div>
+        <div id="export-summary"><div class="empty"><i class="ti ti-report" aria-hidden="true"></i>No data — run reconciliation first</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let state = {
+  bankData: [],
+  ledgerData: [],
+  results: [],
+  exceptions: [],
+  loaded: { bank: false, ledger: false }
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim().replace(/"/g,''));
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i] || '');
+    return obj;
+  }).filter(r => r[headers[0]]);
+}
+
+function loadFile(input, type) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = parseCSV(e.target.result);
+    if (type === 'bank') { state.bankData = data; state.loaded.bank = true; }
+    else { state.ledgerData = data; state.loaded.ledger = true; }
+    const infoEl = document.getElementById(type + '-info');
+    infoEl.innerHTML = `<div class="file-info"><i class="ti ti-check" aria-hidden="true"></i>${file.name} — ${data.length} rows loaded</div>`;
+  };
+  reader.readAsText(file);
+}
+
+function loadSampleData() {
+  state.bankData = [
+    {id:'B001',date:'2024-01-05',description:'Payment - Vendor A',amount:'15000'},
+    {id:'B002',date:'2024-01-08',description:'Transfer - Client X',amount:'32000'},
+    {id:'B003',date:'2024-01-12',description:'Payment - Vendor B',amount:'8500'},
+    {id:'B004',date:'2024-01-15',description:'Transfer - Client Y',amount:'21000'},
+    {id:'B005',date:'2024-01-18',description:'Payment - Vendor C',amount:'5000'},
+    {id:'B006',date:'2024-01-22',description:'Transfer - Client Z',amount:'44000'},
+    {id:'B007',date:'2024-01-25',description:'Payment - Vendor D',amount:'9200'},
+    {id:'B008',date:'2024-02-03',description:'Payment - Vendor A',amount:'15200'},
+    {id:'B009',date:'2024-02-10',description:'Transfer - Client X',amount:'28000'},
+    {id:'B010',date:'2024-02-15',description:'Payment - Vendor E',amount:'6700'},
+  ];
+  state.ledgerData = [
+    {id:'L001',date:'2024-01-05',description:'Payment - Vendor A',amount:'15000'},
+    {id:'L002',date:'2024-01-08',description:'Transfer - Client X',amount:'32000'},
+    {id:'L003',date:'2024-01-12',description:'Payment - Vendor B',amount:'8700'},
+    {id:'L004',date:'2024-01-15',description:'Transfer - Client Y',amount:'21000'},
+    {id:'L005',date:'2024-01-20',description:'Payment - Vendor F',amount:'3300'},
+    {id:'L006',date:'2024-01-22',description:'Transfer - Client Z',amount:'44000'},
+    {id:'L007',date:'2024-01-28',description:'Payment - Vendor G',amount:'12000'},
+    {id:'L008',date:'2024-02-03',description:'Payment - Vendor A',amount:'15200'},
+    {id:'L009',date:'2024-02-10',description:'Transfer - Client X',amount:'28000'},
+    {id:'L010',date:'2024-02-18',description:'Payment - Vendor H',amount:'9100'},
+  ];
+  state.loaded.bank = true;
+  state.loaded.ledger = true;
+  document.getElementById('bank-info').innerHTML = `<div class="file-info"><i class="ti ti-check" aria-hidden="true"></i>sample_bank.csv — 10 rows loaded</div>`;
+  document.getElementById('ledger-info').innerHTML = `<div class="file-info"><i class="ti ti-check" aria-hidden="true"></i>sample_ledger.csv — 10 rows loaded</div>`;
+}
+
+function runReconciliation() {
+  if (!state.loaded.bank || !state.loaded.ledger) {
+    document.getElementById('recon-status').textContent = 'Load both files first.';
+    return;
+  }
+  const results = [];
+  const exceptions = [];
+  const ledgerUsed = new Set();
+
+  state.bankData.forEach(b => {
+    const bAmt = parseFloat(b.amount) || 0;
+    let matched = null;
+    state.ledgerData.forEach((l, idx) => {
+      if (ledgerUsed.has(idx)) return;
+      const lAmt = parseFloat(l.amount) || 0;
+      if (b.date === l.date && Math.abs(bAmt - lAmt) < 0.01) {
+        matched = { idx, l, type: 'matched' };
+      }
+    });
+    if (matched) {
+      ledgerUsed.add(matched.idx);
+      results.push({ bank: b, ledger: matched.l, status: 'matched', diff: 0 });
+    } else {
+      const partialMatch = state.ledgerData.find((l, idx) => !ledgerUsed.has(idx) && b.date === l.date);
+      if (partialMatch) {
+        const pidx = state.ledgerData.indexOf(partialMatch);
+        ledgerUsed.add(pidx);
+        const diff = Math.abs(bAmt - (parseFloat(partialMatch.amount) || 0));
+        results.push({ bank: b, ledger: partialMatch, status: 'amount_mismatch', diff });
+        exceptions.push({ id: 'EXC-' + (exceptions.length+1).toString().padStart(3,'0'), txn_id: b.id, type: 'Amount mismatch', amount: diff.toFixed(2), bank_ref: b.id, ledger_ref: partialMatch.id, date: b.date, status: 'open', desc: b.description });
+      } else {
+        results.push({ bank: b, ledger: null, status: 'missing_ledger', diff: bAmt });
+        exceptions.push({ id: 'EXC-' + (exceptions.length+1).toString().padStart(3,'0'), txn_id: b.id, type: 'Missing in ledger', amount: bAmt.toFixed(2), bank_ref: b.id, ledger_ref: '—', date: b.date, status: 'open', desc: b.description });
+      }
+    }
+  });
+
+  state.ledgerData.forEach((l, idx) => {
+    if (!ledgerUsed.has(idx)) {
+      const lAmt = parseFloat(l.amount) || 0;
+      results.push({ bank: null, ledger: l, status: 'missing_bank', diff: lAmt });
+      exceptions.push({ id: 'EXC-' + (exceptions.length+1).toString().padStart(3,'0'), txn_id: l.id, type: 'Missing in bank', amount: lAmt.toFixed(2), bank_ref: '—', ledger_ref: l.id, date: l.date, status: 'open', desc: l.description });
+    }
+  });
+
+  state.results = results;
+  state.exceptions = exceptions;
+
+  const matched = results.filter(r => r.status === 'matched').length;
+  const total = results.length;
+  const rate = total > 0 ? Math.round((matched / total) * 100) : 0;
+  const excRate = total > 0 ? Math.round(((total - matched) / total) * 100) : 0;
+  const exposure = exceptions.reduce((s, e) => s + parseFloat(e.amount), 0);
+
+  document.getElementById('d-total').textContent = total;
+  document.getElementById('d-recon-rate').textContent = rate + '%';
+  document.getElementById('d-recon-bar').style.width = rate + '%';
+  document.getElementById('d-exc-rate').textContent = excRate + '%';
+  document.getElementById('d-exc-bar').style.width = excRate + '%';
+  document.getElementById('d-exposure').textContent = '$' + exposure.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0});
+
+  renderReconResults(results, matched, total, rate);
+  renderExceptions();
+  renderDashboardExceptions();
+  renderAnalytics();
+  renderExportSummary(matched, total, rate, exposure);
+
+  document.getElementById('recon-status').textContent = `Done — ${total} transactions processed`;
+}
+
+function renderReconResults(results, matched, total, rate) {
+  const el = document.getElementById('recon-results');
+  const rows = results.map(r => {
+    const statusMap = { matched: 'matched', amount_mismatch: 'partial', missing_ledger: 'unmatched', missing_bank: 'unmatched' };
+    const labelMap = { matched: 'Matched', amount_mismatch: 'Mismatch', missing_ledger: 'Missing in ledger', missing_bank: 'Missing in bank' };
+    const bankId = r.bank ? r.bank.id : '—';
+    const ledgerId = r.ledger ? r.ledger.id : '—';
+    const date = r.bank ? r.bank.date : r.ledger.date;
+    const desc = r.bank ? r.bank.description : r.ledger.description;
+    const amt = r.bank ? r.bank.amount : r.ledger.amount;
+    return `<tr><td>${bankId}</td><td>${ledgerId}</td><td>${date}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${desc}</td><td>$${parseFloat(amt).toLocaleString()}</td><td>${r.diff > 0 ? '$' + r.diff.toFixed(2) : '—'}</td><td><span class="badge ${statusMap[r.status]}">${labelMap[r.status]}</span></td></tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="section" style="margin-top:1rem">
+      <div class="section-title">Results — ${matched}/${total} matched (${rate}%)</div>
+      <div style="overflow-x:auto">
+        <table class="table">
+          <thead><tr><th>Bank ID</th><th>Ledger ID</th><th>Date</th><th>Description</th><th>Amount</th><th>Difference</th><th>Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function renderExceptions() {
+  const filter = document.getElementById('exc-filter').value;
+  const filtered = filter === 'all' ? state.exceptions : state.exceptions.filter(e => {
+    if (filter === 'missing_bank') return e.type === 'Missing in bank';
+    if (filter === 'missing_ledger') return e.type === 'Missing in ledger';
+    if (filter === 'amount_mismatch') return e.type === 'Amount mismatch';
+    return true;
+  });
+  const el = document.getElementById('exceptions-table');
+  if (!filtered.length) { el.innerHTML = '<div class="empty"><i class="ti ti-check" aria-hidden="true"></i>No exceptions for this filter</div>'; return; }
+  const rows = filtered.map(e => `
+    <tr>
+      <td style="font-family:var(--font-mono);font-size:12px">${e.id}</td>
+      <td>${e.txn_id}</td>
+      <td>${e.type}</td>
+      <td>${e.date}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.desc}</td>
+      <td>$${parseFloat(e.amount).toLocaleString()}</td>
+      <td>${e.bank_ref}</td>
+      <td>${e.ledger_ref}</td>
+      <td><span class="badge ${e.status}">${e.status}</span></td>
+      <td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="resolveException('${e.id}')">Resolve</button></td>
+    </tr>`).join('');
+  el.innerHTML = `<div style="overflow-x:auto"><table class="table"><thead><tr><th>ID</th><th>Txn ID</th><th>Type</th><th>Date</th><th>Description</th><th>Amount</th><th>Bank ref</th><th>Ledger ref</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function resolveException(id) {
+  const exc = state.exceptions.find(e => e.id === id);
+  if (exc) { exc.status = 'resolved'; renderExceptions(); renderDashboardExceptions(); }
+}
+
+function renderDashboardExceptions() {
+  const el = document.getElementById('dash-exceptions-list');
+  const open = state.exceptions.filter(e => e.status === 'open').slice(0, 5);
+  if (!open.length) { el.innerHTML = '<div class="empty"><i class="ti ti-check" aria-hidden="true"></i>No open exceptions</div>'; return; }
+  const rows = open.map(e => `<tr><td style="font-family:var(--font-mono);font-size:12px">${e.id}</td><td>${e.type}</td><td>$${parseFloat(e.amount).toLocaleString()}</td><td><span class="badge open">open</span></td></tr>`).join('');
+  el.innerHTML = `<table class="table"><thead><tr><th>ID</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderAnalytics() {
+  const monthly = {};
+  state.results.forEach(r => {
+    const date = r.bank ? r.bank.date : r.ledger ? r.ledger.date : '';
+    const month = date.substring(0, 7);
+    if (!monthly[month]) monthly[month] = { total: 0, matched: 0, amount: 0 };
+    monthly[month].total++;
+    if (r.status === 'matched') monthly[month].matched++;
+    monthly[month].amount += parseFloat(r.bank ? r.bank.amount : r.ledger ? r.ledger.amount : 0) || 0;
+  });
+
+  const chartEl = document.getElementById('monthly-chart');
+  const months = Object.keys(monthly).sort();
+  const maxAmt = Math.max(...months.map(m => monthly[m].amount));
+  chartEl.innerHTML = months.map(m => {
+    const pct = maxAmt > 0 ? Math.round((monthly[m].amount / maxAmt) * 100) : 0;
+    const matchPct = monthly[m].total > 0 ? Math.round((monthly[m].matched / monthly[m].total) * 100) : 0;
+    return `<div class="chart-bar-row">
+      <div class="label">${m}</div>
+      <div class="bar-wrap"><div class="bar" style="width:${pct}%;background:var(--fill-accent)">$${Math.round(monthly[m].amount).toLocaleString()}</div></div>
+      <div style="font-size:11px;color:var(--text-muted);width:60px;text-align:right">${matchPct}% matched</div>
+    </div>`;
+  }).join('');
+
+  const types = {};
+  state.exceptions.forEach(e => { types[e.type] = (types[e.type] || 0) + 1; });
+  const excEl = document.getElementById('exc-breakdown');
+  const total = state.exceptions.length;
+  const colors = { 'Missing in ledger': 'var(--fill-danger)', 'Missing in bank': 'var(--fill-warning)', 'Amount mismatch': 'var(--fill-accent)' };
+  excEl.innerHTML = total === 0 ? '<div class="empty">No exceptions</div>' : Object.entries(types).map(([type, count]) => {
+    const pct = Math.round((count / total) * 100);
+    return `<div class="chart-bar-row">
+      <div class="label" style="width:120px">${type}</div>
+      <div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${colors[type]||'var(--fill-accent)'}">${count}</div></div>
+      <div style="font-size:11px;color:var(--text-muted);width:40px;text-align:right">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function renderExportSummary(matched, total, rate, exposure) {
+  const unmatched = total - matched;
+  document.getElementById('export-summary').innerHTML = `
+    <div class="summary-row"><span>Total transactions</span><span>${total}</span></div>
+    <div class="summary-row"><span>Matched</span><span style="color:var(--text-success)">${matched}</span></div>
+    <div class="summary-row"><span>Unmatched / exceptions</span><span style="color:var(--text-danger)">${unmatched}</span></div>
+    <div class="summary-row"><span>Reconciliation rate</span><span>${rate}%</span></div>
+    <div class="summary-row"><span>Financial exposure</span><span style="color:var(--text-warning)">$${exposure.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</span></div>`;
+}
+
+function exportCSV(type) {
+  if (!state.results.length) { document.getElementById('export-msg').innerHTML = '<div class="alert danger"><i class="ti ti-alert-circle" aria-hidden="true"></i>No data to export — run reconciliation first</div>'; return; }
+  let rows, headers;
+  if (type === 'exceptions') {
+    headers = ['Exception ID','Transaction ID','Type','Date','Description','Amount','Bank Ref','Ledger Ref','Status'];
+    rows = state.exceptions.map(e => [e.id, e.txn_id, e.type, e.date, e.desc, e.amount, e.bank_ref, e.ledger_ref, e.status]);
+  } else if (type === 'matched') {
+    headers = ['Bank ID','Ledger ID','Date','Description','Amount','Status'];
+    rows = state.results.filter(r => r.status === 'matched').map(r => [r.bank.id, r.ledger.id, r.bank.date, r.bank.description, r.bank.amount, 'Matched']);
+  } else {
+    headers = ['Bank ID','Ledger ID','Date','Description','Bank Amount','Ledger Amount','Difference','Status'];
+    rows = state.results.map(r => [r.bank?.id||'—', r.ledger?.id||'—', r.bank?.date||r.ledger?.date, r.bank?.description||r.ledger?.description, r.bank?.amount||'—', r.ledger?.amount||'—', r.diff.toFixed(2), r.status]);
+  }
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv,' + encodeURIComponent(csv);
+  a.download = type + '_reconciliation_report.csv';
+  a.click();
+  document.getElementById('export-msg').innerHTML = '<div class="alert success"><i class="ti ti-check" aria-hidden="true"></i>Report downloaded successfully</div>';
+}
+</script>
